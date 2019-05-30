@@ -25,8 +25,8 @@ model_dir=${pwd_dir}/${model_dir}
 eval_dir=${pwd_dir}/${eval_dir}
 
 # set up conda
-conda_act=activate
-conda_dea=deactivate
+conda_act=${CONDA_HOME}/bin/activate
+conda_dea=${CONDA_HOME}/bin/deactivate
 
 for (( e=1; e<=$niter; e++ ))
 do
@@ -40,7 +40,7 @@ do
     mkdir -p ${data_dir}/${next_dir}
     for split in train dev
     do
-        python scripts/openie_extract.py \
+        python openie_extract.py \
             --model ${model_dir}/${cur_dir}/tag_model \
             --inp data/sent/oie2016_${split}.txt \
             --out ${data_dir}/${next_dir}/oie2016.${split}.beam \
@@ -116,19 +116,19 @@ do
 
     echo "rerank extractions generated from previous model"
 
-    python scripts/rerank.py \
+    python rerank.py \
         --model ${model_dir}/${next_dir}/model.tar.gz \
         --inp ${eval_to}/oie2016.txt.conll:${eval_from}/oie2016.txt \
         --out ${eval_to}/oie2016.txt
 
     echo "convert rerank model to openie model"
 
-    ./scripts/rerank_to_oie.sh ${model_dir}/iter0/tag_model ${model_dir}/${next_dir}
+    ./rerank_to_oie.sh ${model_dir}/iter0/tag_model ${model_dir}/${next_dir}
 
     echo "generate extractions using the resulting model"
 
     mkdir -p ${eval_to}/tag_model
-    python scripts/openie_extract.py \
+    python openie_extract.py \
         --model ${model_dir}/${next_dir}/tag_model \
         --inp data/sent/oie2016_test.txt \
         --out ${eval_to}/tag_model/oie2016.txt \

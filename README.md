@@ -16,7 +16,7 @@ Our model implementation is based on [AllenNLP](https://github.com/allenai/allen
     cd oie_rank
     conda create -n oie_rank python=3.6
     conda activate oie_rank
-    conda install allennlp=0.8.2
+    pip install allennlp==0.8.1
     conda deactivate
     cd ..
     ```
@@ -37,6 +37,7 @@ Our model implementation is based on [AllenNLP](https://github.com/allenai/allen
 
 1. Download pre-trained ELMo (weights and options).
     ```bash
+    cd oie_rank
     mkdir pretrain/elmo/
     cd pretrain/elmo/
     wget https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5
@@ -45,53 +46,54 @@ Our model implementation is based on [AllenNLP](https://github.com/allenai/allen
 
 2. Download pre-trained RnnOIE and its extractions. `gdown.pl` can be download from [here](https://github.com/circulosmeos/gdown.pl).
     ```bash
+    cd oie_rank
     mkdir pretrain/rnnoie/
     cd pretrain/rnnoie/
     gdown.pl https://drive.google.com/open?id=1ykuxnIE1vkhJeq-81UPtAs6K6_h3Vcw3 model.tar.gz  # download model
     gdown.pl https://drive.google.com/open?id=1Mn2ptAAiB5rTRg3GYMtBk9lrFcC3Qb4R oie2016.txt  # download extractions
     ```
 
+## Iterative rank-aware learning
+
+First, create data, model, and evaluation directories for iterative training.
+```bash
+./init_iter.sh
+```
+
+Then, run iterative rank-aware training (3 iterations with beam size of 5).
+```bash
+CONDA_HOME=PATH_TO_YOUR_CONDA_HOME ./iter.sh \
+    3 iter/data iter/model iter/eval training_config/iter.jsonnet 5
+```
+
+The extractions generated at `i`-th iteration are saved to `iter/eval/iteri/tag_model/`.
+The reranking results of extractions generated at `i-1`-th iteration are saved to `iter/eval/iteri/`.
+
 ## Train and evaluate RnnOIE
 
+In addition to using pretrained RnnOIE model, you can also use the following commands to train from scratch and evaluate it.
+
 ```bash
+cd oie_rank
 conda activate oie_rank
+# train
 allennlp train training_config/oie.jsonnet \
     --include-package rerank \
-    --serialization-dir MODEL_DIR  # train
-python scripts/openie_extract.py \
+    --serialization-dir MODEL_DIR
+# generate extractions
+python openie_extract.py \
     --model MODEL_DIR/model.tar.gz \
     --inp data/sent/oie2016_test.txt \
     --out RESULT_DIR/oie2016.txt \
-    --keep_one  # generate extractions
+    --keep_one
+# evaluate
 cd ../supervised-oie/supervised-oie-benchmark/
 conda activate sup_oie
 python benchmark.py \
     --gold=oie_corpus/test.oie.orig.correct.head \
     --out=/dev/null \
     --tabbed=RESULT_DIR/oie2016.txt \
-    --predArgHeadMatch  # evaluate
-```
-
-## Iterative rank-aware learning
-
-First, create data, model, and evaluation directories for iterative training.
-```bash
-mkdir iter
-mkdir iter/data  # data root dir
-mkdir iter/model  # model root dir
-mkdir -p iter/model/iter0/tag_model
-cp pretrain/rnnoie/model.tar.gz iter/model/iter0/tag_model
-pushd iter/model/iter0/tag_model
-tar zxvf model.tar.gz
-popd  # copy and uncompress inital oie model
-mkdir iter/eval  # evaluation root dir
-mkdir -p iter/eval/iter0/tag_model
-cp pretrain/rnnoie/oie2016.txt iter/eval/iter0/tag_model  # copy initial extractions
-```
-
-Then, run iterative rank-aware training (3 iterations with beam size of 5).
-```bash
-./iter.sh 3 iter/data iter/model iter/eval training_config/iter.jsonnet 5
+    --predArgHeadMatch
 ```
 
 ## Reference
