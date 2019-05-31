@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #SBATCH --mem=20000
 #SBATCH --gres=gpu:1
 #SBATCH --time=0
@@ -8,15 +8,15 @@ set -e
 model_env_name=oie_rank
 eval_env_name=sup_oie
 
-niter=$1          # number of iterations
-data_dir=$2       # data root dir.
-model_dir=$3      # model root dir. Initial model should be put in
-                  # ${model_dir}/iter0/tag_model/model.tar.gz
-                  # (both compressed and uncompressed)
-eval_dir=$4       # evaluation root dir. Initial extractions should be put in
-                  # ${eval_dir}/iter0/tag_model
-rerank_conf=$5    # training config file
-beam=$6           # size of beam search
+niter=$1                # number of iterations
+data_dir=$2/data        # data dir.
+model_dir=$2/model      # model dir. Initial model should be put in
+                        # ${model_dir}/iter0/tag_model/model.tar.gz
+                        # (both compressed and uncompressed)
+eval_dir=$2/eval        # evaluation dir. Initial extractions should be put in
+                        # ${eval_dir}/iter0/tag_model
+rerank_conf=$3          # training config file
+beam=$4                 # size of beam search
 
 # make path absolute
 pwd_dir=$(pwd)
@@ -27,6 +27,8 @@ eval_dir=${pwd_dir}/${eval_dir}
 # set up conda
 conda_act=${CONDA_HOME}/bin/activate
 conda_dea=${CONDA_HOME}/bin/deactivate
+
+source $conda_act $model_env_name
 
 for (( e=1; e<=$niter; e++ ))
 do
