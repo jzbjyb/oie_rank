@@ -2,9 +2,9 @@
 
 This repository contains data and code to reproduce the experiments in:
 
-Improving Open Information Extraction via Iterative Rank-Aware Learning.
+[Improving Open Information Extraction via Iterative Rank-Aware Learning](https://arxiv.org/pdf/1905.13413),
 
-by Zhengbao Jiang, Pengcheng Yin, and Graham Neubig.
+by Zhengbao Jiang, Pengcheng Yin and Graham Neubig.
 
 ## Install
 
